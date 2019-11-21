@@ -9,6 +9,7 @@ class CircuitError(Exception):
 class WireError(CircuitError):
     pass
 
+# TODO: constant wires?
 
 class Wire:
     def __init__(self, value=None):
@@ -123,16 +124,27 @@ class Component:
         self.inputs = []
         self.outputs = []
 
-    def input(self, wire):
+    def input(self, wire, bus_length=None):
+        if bus_length is not None:
+            if len(wire) != bus_length:
+                raise CircuitError(f"input wire to {self} must be a Bus of length {bus_length}.")
         self.inputs.append(wire)
         wire.connect(self)
         return wire
 
-    def output(self, wire):
+    def output(self, wire, bus_length=None):
         if wire is None:
-            out = Wire()
+            if bus_length is None:
+                out = Wire()
+            else:
+                out = Bus(bus_length)
         else:
             out = wire
+
+        if bus_length is not None:
+            if len(wire) != bus_length:
+                raise CircuitError(f"output wire from {self} must be a Bus of length {bus_length}.")
+
         self.outputs.append(out)
         return out
 
