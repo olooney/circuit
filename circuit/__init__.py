@@ -1,3 +1,3 @@
 from .kernel import Wire, Component, Bus, Register, CircuitError, WireError, NAND
 from .logic_gates import NOT, AND, OR, XOR, XNOR
-from .arithmetic import HalfAdder, FullAdder, Add8, Not8, And8
+from .alu import HalfAdder, FullAdder, Add8, Not8, And8

@@ -1,6 +1,5 @@
 import unittest 
-from circuit.kernel import Wire, Bus, Register, NAND
-from circuit.kernel import WireError
+from circuit.kernel import Wire, Bus, Register, NAND, WireError
 
 class TestWire(unittest.TestCase):
     def test_wire(self):
