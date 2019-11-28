@@ -28,6 +28,21 @@ class FullAdder(Component):
 
 
 class Add8(Component):
+    """
+    Add two 8-bit unsigned integers. 
+
+    Inputs `a` and `b` and output `c` must all be 8-bit busses. The first wire
+    is the most significant bit and the 8th wire is the least. 
+    
+    If the result doesn't fit in 8 bits, the output carry flag `cout` will be
+    set high, and the result in `s` will be the sum modulo 256. An input carry
+    flag `cin` is also accepted, and the result in `s` is increased by 1 if the
+    input carry flag is set. This allows for the addition of 16-bit or larger
+    integers.
+
+    This component can also be used for subtraction by first taking the two's
+    complement of one of the inputs using the `Not8` component.
+    """
     def __init__(self, a, b, cin, s=None, cout=None):
         super().__init__()
         self.a = self.input(a, 8)
@@ -36,7 +51,12 @@ class Add8(Component):
         self.s = self.output(s, 8)
         self.cout = self.output(cout)
 
-        adder = FullAdder(a=self.a[7], b=self.b[7], cin=self.cin)
+        adder = FullAdder(
+            a=self.a[7], 
+            b=self.b[7], 
+            cin=self.cin,
+            s=self.s[7],
+        )
         for i in range(6, -1, -1):
             adder = FullAdder(
                 a=self.a[i], 

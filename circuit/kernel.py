@@ -96,7 +96,7 @@ class Bus(Wire):
 
     def connect(self, component):
         for wire in self.wires:
-            wires.connect(component)
+            wire.connect(component)
 
     @property
     def value(self):

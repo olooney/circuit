@@ -1,13 +1,25 @@
 import unittest
 
-from circuit import Wire
+from circuit import Wire, Bus
 from circuit.logic_gates import *
 
 
 class LogicGateTest(unittest.TestCase):
 
-    def test_binary_gates(self):
-        # TODO be more assertive :)
+    def test_not_gate(self):
+        inp = Wire()
+        out = Wire()
+        NOT(inp, out)
+        inp.value = True
+        self.assertIs(out.value, False)
+        inp.reset()
+        inp.value = False
+        self.assertIs(out.value, True)
+
+    def print_binary_gates(self):
+        """
+        Print truth tables for each gate without assertions.
+        """
         for GateClass in [NAND, AND, OR, NOR, XOR, XNOR]:
             x = Wire()
             y = Wire()
@@ -22,3 +34,38 @@ class LogicGateTest(unittest.TestCase):
                     y.value = y_value
                     print(type(gate).__name__, x.value, y.value, " =>", z.value, sep="\t")
             print()
+
+    def assert_gate(self, GateClass, binary_operation):
+        """
+        Utility for testing a generic binary (two input) gate.
+        """
+        a, b = inputs = Bus(2)
+        gate = GateClass(a=a, b=b)
+        z = gate.out
+
+        for x in [True, False]:
+            for y in [True, False]:
+                inputs.reset()
+                a.value = x
+                b.value = y
+                self.assertIs(binary_operation(x, y), gate.out.value)
+
+    def test_NAND(self):
+        self.assert_gate(NAND, lambda x, y: not (x & y))
+
+    def test_AND(self):
+        self.assert_gate(AND, lambda x, y: x & y)
+
+    def test_OR(self):
+        self.assert_gate(OR, lambda x, y: x | y)
+
+    def test_NOR(self):
+        self.assert_gate(NOR, lambda x, y: not (x | y))
+
+    def test_XOR(self):
+        self.assert_gate(XOR, lambda x, y: x ^ y)
+
+    def test_XNOR(self):
+        self.assert_gate(XNOR, lambda x, y: not (x ^ y))
+
+

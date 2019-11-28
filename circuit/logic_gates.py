@@ -7,7 +7,7 @@ class NOT(Component):
         self.inp = self.input(inp)
         self.out = self.output(out)
         
-        NAND(a=inp, b=inp, out=self.out)
+        NAND(a=self.inp, b=self.inp, out=self.out)
 
 
 class AND(Component):
@@ -28,7 +28,11 @@ class OR(Component):
         self.b = self.input(b)
         self.out = self.output(out)
         
-        nand = NAND(a=NOT(a).out, b=NOT(b).out, out=self.out)
+        nand = NAND(
+            a=NOT(self.a).out, 
+            b=NOT(self.b).out, 
+            out=self.out
+        )
 
 
 class NOR(Component):
@@ -38,7 +42,7 @@ class NOR(Component):
         self.b = self.input(b)
         self.out = self.output(out)
         
-        a_or_b = OR(a=a, b=a).out
+        a_or_b = OR(a=self.a, b=self.b).out
         NOT(inp=a_or_b, out=self.out)
     
 
@@ -49,8 +53,8 @@ class XOR(Component):
         self.b = self.input(b)
         self.out = self.output(out)
         
-        c = NAND(a=a, b=b).out
-        d = OR(a=a, b=b).out
+        c = NAND(a=self.a, b=self.b).out
+        d = OR(a=self.a, b=self.b).out
         AND(a=c, b=d, out=self.out)
         
 
@@ -61,6 +65,6 @@ class XNOR(Component):
         self.b = self.input(b)
         self.out = self.output(out)
         
-        c = NAND(a=a, b=b).out
-        d = OR(a=a, b=b).out
+        c = NAND(a=self.a, b=self.b).out
+        d = OR(a=self.a, b=self.b).out
         NAND(a=c, b=d, out=self.out)

@@ -66,6 +66,15 @@ class TestBus(unittest.TestCase):
         self.assertEqual(bus[2].value, True)
         self.assertEqual(bus[3].value, False)
 
+    def test_connect(self):
+        a, b = Bus(2)
+        nand = NAND(a, b)
+
+        bus = Bus(10)
+        bus.connect(nand)
+        for wire in bus:
+            component = wire.downstream_components[0]
+            self.assertIs(component, nand)
 
 class TestRegister(unittest.TestCase):
     def test_stateful(self):
