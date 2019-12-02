@@ -68,3 +68,19 @@ class XNOR(Component):
         c = NAND(a=self.a, b=self.b).out
         d = OR(a=self.a, b=self.b).out
         NAND(a=c, b=d, out=self.out)
+
+
+class Mux(Component):
+    def __init__(self, a, b, select, out=None):
+        super().__init__()
+        self.a = self.input(a)
+        self.b = self.input(b)
+        self.select = self.input(select)
+        self.out = self.output(out)
+
+        OR(
+            AND(self.a, NOT(self.select).out).out,
+            AND(self.b, self.select).out,
+            out=self.out
+        )
+

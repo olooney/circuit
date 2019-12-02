@@ -69,3 +69,24 @@ class LogicGateTest(unittest.TestCase):
         self.assert_gate(XNOR, lambda x, y: not (x ^ y))
 
 
+class MuxTest(unittest.TestCase):
+    def test_mux(self):
+        a, b, sel = inputs = Bus(3)
+        out = Wire()
+        mux = Mux(a=a, b=b, select=sel, out=out)
+
+        for x in [0, 1]:
+            for y in [0, 1]:
+                inputs.reset()
+                a.value = bool(x)
+                b.value = bool(y)
+                sel.value = False
+                self.assertIs(out.value, a.value, "OUT == A")
+
+                inputs.reset()
+                a.value = bool(x)
+                b.value = bool(y)
+                sel.value = True 
+                self.assertIs(out.value, b.value, "OUT == B")
+
+                    
