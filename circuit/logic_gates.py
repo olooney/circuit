@@ -1,7 +1,18 @@
+"""
+Common combinational logic gates.
+"""
 from .kernel import Wire, Component, NAND
 
-
 class NOT(Component):
+    """
+    In CMOS architecture, a NOT gate can be implemented
+    with just one pair of transistors, while the NAND
+    gate requires two pairs. Therefore it is common to
+    implement NOT as a primitive instead of tying the
+    two inputs of a NAND gate together. However, for
+    conceptual simplicity, we will implement NOT in
+    terms of NAND, even though its less efficient.
+    """
     def __init__(self, inp, out=None):
         super().__init__()
         self.inp = self.input(inp)
@@ -68,3 +79,4 @@ class XNOR(Component):
         c = NAND(a=self.a, b=self.b).out
         d = OR(a=self.a, b=self.b).out
         NAND(a=c, b=d, out=self.out)
+

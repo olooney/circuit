@@ -1,20 +1,34 @@
 """
-Wire and Component, plus the magic NAND.
-TODO: Register, Bus
+CircuitError, WireError, etc: exception classes for circuit simulation errors.
+
+Wire and Bus: used to propagate Boolean values between components.
+
+Component: Abstract Base Class for all components.
+
+NAND: the primitive used to implement all other combinatorial logic.
+
+Register: a 1-bit register that can store a single Boolean value across clock
+cycles. This is the primitive used to implement all sequential logic.
+
 """
 
 class CircuitError(Exception):
     pass
 
+
 class WireError(CircuitError):
     pass
 
-# TODO: constant wires?
 
 class Wire:
-    def __init__(self, value=None):
+    def __init__(self, value=None, hard=False):
         self.downstream_components = []
+        if value is not None:
+            value = bool(value)
         self._value = value
+        self.hard = bool(hard)
+        if self.hard and self._value is None:
+            raise WireError("a hardwired value must be True or False, not None.")
 
     @property
     def value(self):
@@ -22,6 +36,9 @@ class Wire:
 
     @value.setter
     def value(self, value):
+        if self.hard:
+            raise WireError("A hardwired value can never be set.")
+
         if self._value is not None:
             if value != self._value:
                 raise WireError("Wire set to conflicting value.")
@@ -32,7 +49,7 @@ class Wire:
             raise WireError("Use reset() to clear wire.")
 
     def reset(self):
-        if self.value is not None:
+        if self.value is not None and not self.hard:
             self._value = None
             for component in self.downstream_components:
                 component.reset()
