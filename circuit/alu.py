@@ -1,5 +1,5 @@
 from .kernel import Wire, Bus, Component
-from .logic_gates import NOT, AND, OR, XOR, NAND, NOR, XNOR
+from .logic_gates import *
 
 class HalfAdder(Component):
     def __init__(self, a, b, s=None, c=None):
@@ -86,6 +86,93 @@ class And8(Component):
 
         for i in range(0, 8):
             AND(a=self.a[i], b=self.b[i], out=self.out[i])
+
+
+class Mux8(Component):
+    def __init__(self, a, b, select, out=None):
+        super().__init__()
+        self.a = self.input(a, 8)
+        self.b = self.input(b, 8)
+        self.select = self.input(select)
+        self.out = self.output(out, 8)
+
+        # TODO: could save some transistors by reusing NOT(select)...
+        for i in range(8):
+            Mux(
+                a=self.a[i], 
+                b=self.b[i],
+                select=self.select,
+                out=self.out[i]
+            )
+            
+
+class ALU(Component):
+    """
+    Arithmetic/Logic Unit.
+
+    It turns out we can cover a large number of cases with relatively few
+    transisters by leveraging de Morgan's laws.
+    """
+
+    class OPCODE:
+        AND = 0
+        NAND = 32
+        OR = 224
+        NOR = 192
+        ADD = 4
+        A_MINUS_B = 68
+        B_MINUS_A = 132
+        NEGATIVE_A = 140
+        NEGATIVE_B = 84
+        INC_A = 236
+        INC_B = 244
+
+    def __init__(
+        self,
+        a,
+        b,
+        op,
+        out
+    ):
+        super().__init__()
+        self.a = self.input(a, 8)
+        self.b = self.input(b, 8)
+        self.op = self.input(op, 8)
+
+        self.na = self.op[0]   # negate A
+        self.nb = self.op[1]   # negate B
+        self.nout = self.op[2] # negate OUT
+        self.za = self.op[3]   # zero A
+        self.zb = self.op[4]   # zero B
+        self.arithmetic = self.op[5]  # 0 for AND, 1 for ADD
+        # last two bits reserved
+
+        self.out = self.output(out)
+        
+        zero = Bus([Wire(False, hard=True) for i in range(8)])
+
+        # Optionally zero-out and/or negate input A
+        a2 = Mux8(self.a, zero, self.za).out
+        a3 = Mux8(a2, Not8(a2).out, self.na).out
+
+        # Optionally zero-out and/or negate input B
+        b2 = Mux8(self.b, zero, self.zb).out
+        b3 = Mux8(b2, Not8(b2).out, self.nb).out
+
+        # Do either Arithmetic or Logic
+        out = Mux8(
+            a=And8(a3, b3).out,
+            b=Add8(a3, b3).out,
+            select=self.arithmetic
+        ).out
+
+        # Optionally negate the output
+        Mux8(
+            a=out,
+            b=Not8(out),
+            select=self.nout,
+            out=self.out
+        )
 
 
 # TODO: left/right shift/rotate
