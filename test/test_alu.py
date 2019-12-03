@@ -156,31 +156,77 @@ class ALUTest(unittest.TestCase):
             cout=self.cout,
         )
 
-    def test_and(self):
-        self.inputs.reset()
-        self.a.value = 3
-        self.b.value = 6
-        self.op.value = self.alu.OPCODE.AND
-        self.cin.value = False
+    def assert_op(self, opcode, op, cin=False):
+        nums = [0, 1, 2, 42, 77, 100, 127, 128, 196, 254, 255]
 
-        self.assertEqual(self.out.value, 2)
+        for x in nums:
+            for y in nums:
+                self.inputs.reset()
+                self.a.value = x
+                self.b.value = y
+                self.op.value = opcode
+                self.cin.value = cin
+
+                correct = op(x, y)
+                # print(opcode, ":", x, y, "=", self.out.value, "/", correct)
+                self.assertEqual(self.out.value, correct)
+
+    def test_zero(self):
+        self.assert_op(self.alu.OPCODE.ZERO, lambda a, b: 0)
+
+    def test_one(self):
+        self.assert_op(self.alu.OPCODE.ONE, lambda a, b: 1)
+
+    def test_mone(self):
+        self.assert_op(self.alu.OPCODE.MONE, lambda a, b: 255)
+                
+    def test_a(self):
+        self.assert_op(self.alu.OPCODE.A, lambda a, b: a)
+
+    def test_b(self):
+        self.assert_op(self.alu.OPCODE.B, lambda a, b: b)
+
+    def test_na(self):
+        self.assert_op(self.alu.OPCODE.NA, lambda a, b: ~a % 256)
+
+    def test_nb(self):
+        self.assert_op(self.alu.OPCODE.NB, lambda a, b: ~b % 256)
+
+    def test_and(self):
+        self.assert_op(self.alu.OPCODE.AND, lambda a, b: a & b)
+
+    def test_nand(self):
+        self.assert_op(self.alu.OPCODE.NAND, lambda a, b: ~(a & b) % 256)
+
+    def test_or(self):
+        self.assert_op(self.alu.OPCODE.OR, lambda a, b: a | b)
+
+    def test_nor(self):
+        self.assert_op(self.alu.OPCODE.NOR, lambda a, b: ~(a | b) % 256)
+
+    def test_ma(self):
+        self.assert_op(self.alu.OPCODE.MA, lambda a, b: -a % 256)
+
+    def test_mb(self):
+        self.assert_op(self.alu.OPCODE.MB, lambda a, b: -b % 256)
 
     def test_add(self):
-        self.inputs.reset()
-        self.a.value = 42
-        self.b.value = 17
-        self.op.value = self.alu.OPCODE.ADD
-        self.cin.value = False
-
-        self.assertEqual(self.out.value, 59)
+        self.assert_op(self.alu.OPCODE.ADD, lambda a, b: (a + b) % 256)
 
     def test_sub(self):
-        self.inputs.reset()
-        self.a.value = 42
-        self.b.value = 17
-        self.op.value = self.alu.OPCODE.A_MINUS_B
-        self.cin.value = True # TODO: HOW TO ENFORCE THIS?
+        self.assert_op(self.alu.OPCODE.SUB, lambda a, b: (a - b) % 256)
 
-        self.assertEqual(self.out.value, 25)
+    def test_msub(self):
+        self.assert_op(self.alu.OPCODE.MSUB, lambda a, b: (b - a) % 256)
 
-    # TODO: many other opcodes...
+    def test_inca(self):
+        self.assert_op(self.alu.OPCODE.INCA, lambda a, b: (a +1) % 256)
+
+    def test_deca(self):
+        self.assert_op(self.alu.OPCODE.DECA, lambda a, b: (a - 1) % 256)
+
+    def test_incb(self):
+        self.assert_op(self.alu.OPCODE.INCB, lambda a, b: (b +1) % 256)
+
+    def test_decb(self):
+        self.assert_op(self.alu.OPCODE.DECB, lambda a, b: (b - 1) % 256)

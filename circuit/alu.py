@@ -156,7 +156,6 @@ class Mux8(Component):
         self.select = self.input(select)
         self.out = self.output(out, 8)
 
-        # TODO: could save some transistors by reusing NOT(select)...
         for i in range(8):
             Mux(
                 a=self.a[i], 
@@ -175,17 +174,31 @@ class ALU(Component):
     """
 
     class OPCODE:
+        ZERO = 40
+        ONE = 63
+        MONE = 42
+
+        A = 9
+        B = 33
+        NA = 28
+        NB = 52
         AND = 0
-        NAND = 32
-        OR = 224
-        NOR = 192
-        ADD = 4
-        A_MINUS_B = 68
-        B_MINUS_A = 132
-        NEGATIVE_A = 140
-        NEGATIVE_B = 84
-        INC_A = 236
-        INC_B = 244
+        NAND = 2
+        OR = 22
+        NOR = 20
+
+        MA = 15
+        MB = 51
+
+        ADD = 1
+        SUB = 19
+        MSUB = 7
+
+        INCA = 31
+        DECA = 13
+
+        INCB = 55
+        DECB = 49
 
     def __init__(
         self,
@@ -202,13 +215,13 @@ class ALU(Component):
         self.op = self.input(op, 8)
         self.cin = self.input(cin)
 
-        self.na = self.op[0]   # negate A
-        self.nb = self.op[1]   # negate B
-        self.nout = self.op[2] # negate OUT
-        self.za = self.op[3]   # zero A
+        # first two bits reserved
+        self.za = self.op[2]   # zero A
+        self.na = self.op[3]   # negate A
         self.zb = self.op[4]   # zero B
-        self.arithmetic = self.op[5]  # 0 for AND, 1 for ADD
-        # last two bits reserved
+        self.nb = self.op[5]   # negate B
+        self.nout = self.op[6] # negate OUT
+        self.m = self.op[7]    # 1 for "math", 0 for "logic"
 
         self.out = self.output(out, 8)
         self.cout = self.output(cout)
@@ -222,13 +235,13 @@ class ALU(Component):
         b3 = Mux8(b2, Not8(b2).out, self.nb).out
 
         # Do either Arithmetic or Logic
-        a_and_b = And8(a=a3, b=b3).out
-        a_plus_b = Add8(a=a3, b=b3, cin=self.cin, cout=self.cout).out
+        math = And8(a=a3, b=b3).out
+        logic = Add8(a=a3, b=b3, cin=self.cin, cout=self.cout).out
 
         result = Mux8(
-            a=a_and_b,
-            b=a_plus_b,
-            select=self.arithmetic
+            a=math,
+            b=logic,
+            select=self.m
         ).out
 
         # Optionally negate the output
@@ -238,6 +251,3 @@ class ALU(Component):
             select=self.nout,
             out=self.out
         )
-
-
-# TODO: left/right shift/rotate
