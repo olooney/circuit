@@ -62,6 +62,10 @@ class Wire:
         self.downstream_components.append(component)
 
 
+TRUE = Wire(value=True, hard=True)
+FALSE = Wire(value=False, hard=True)
+
+
 class Bus(Wire):
     """
     A bus is simply a bundle of parallel wires. It implements the
@@ -117,6 +121,9 @@ class Bus(Wire):
 
     @property
     def value(self):
+        if any(wire.value is None for wire in self.wires):
+            return None
+
         value = 0
         for wire in self.wires:
             value <<= 1
@@ -159,7 +166,7 @@ class Component:
             out = wire
 
         if bus_length is not None:
-            if len(wire) != bus_length:
+            if len(out) != bus_length:
                 raise CircuitError(f"output wire from {self} must be a Bus of length {bus_length}.")
 
         self.outputs.append(out)
@@ -169,8 +176,7 @@ class Component:
         pass
 
     def reset(self):
-        for wire in self.outputs:
-            wire.reset()
+        pass
 
 
 class NAND(Component):
@@ -196,6 +202,12 @@ class NAND(Component):
             self.out.value = True
         elif self.a.value is True and self.b.value is True:
             self.out.value = False
+
+    def reset(self):
+        super().reset()
+        for wire in self.outputs:
+            wire.reset()
+
 
 
 class Register(Component):
@@ -223,10 +235,14 @@ class Register(Component):
             self.out.value = self.state
 
     def reset(self):
+        super().reset()
+
         # update internal state if appropriate
         if self.next_state is not None:
             self.state = self.next_state
             self.next_state = None
 
-        super().reset()
+        # propagate the reset
+        for wire in self.outputs:
+            wire.reset()
 

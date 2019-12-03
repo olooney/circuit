@@ -1,29 +1,32 @@
-from .kernel import Wire, Bus, Component
+from .kernel import Wire, Bus, Component, TRUE, FALSE
 from .logic_gates import *
 
+# constant 8-bit zero (all bits 0)
+ZERO = Bus([FALSE for i in range(8)])
+
 class HalfAdder(Component):
-    def __init__(self, a, b, s=None, c=None):
+    def __init__(self, a, b, out=None, c=None):
         super().__init__()
         self.a = self.input(a)
         self.b = self.input(b)
-        self.s = self.output(s)
+        self.out = self.output(out)
         self.c = self.output(c)
 
-        XOR(a=self.a, b=self.b, out=self.s)
+        XOR(a=self.a, b=self.b, out=self.out)
         AND(a=self.a, b=self.b, out=self.c)
 
 
 class FullAdder(Component):
-    def __init__(self, a, b, cin, s=None, cout=None):
+    def __init__(self, a, b, cin, out=None, cout=None):
         super().__init__()
         self.a = self.input(a)
         self.b = self.input(b)
         self.cin = self.input(cin)
-        self.s = self.output(s)
+        self.out = self.output(out)
         self.cout = self.output(cout)
 
         first_half = HalfAdder(a=self.a, b=self.b)
-        second_half = HalfAdder(a=first_half.s, b=self.cin, s=self.s)
+        second_half = HalfAdder(a=first_half.out, b=self.cin, out=self.out)
         OR(a=first_half.c, b=second_half.c, out=self.cout)
 
 
@@ -35,34 +38,34 @@ class Add8(Component):
     is the most significant bit and the 8th wire is the least. 
     
     If the result doesn't fit in 8 bits, the output carry flag `cout` will be
-    set high, and the result in `s` will be the sum modulo 256. An input carry
-    flag `cin` is also accepted, and the result in `s` is increased by 1 if the
+    set high, and the result in `out` will be the sum modulo 256. An input carry
+    flag `cin` is also accepted, and the result in `out` is increased by 1 if the
     input carry flag is set. This allows for the addition of 16-bit or larger
     integers.
 
     This component can also be used for subtraction by first taking the two's
     complement of one of the inputs using the `Not8` component.
     """
-    def __init__(self, a, b, cin, s=None, cout=None):
+    def __init__(self, a, b, cin, out=None, cout=None):
         super().__init__()
         self.a = self.input(a, 8)
         self.b = self.input(b, 8)
         self.cin = self.input(cin)
-        self.s = self.output(s, 8)
+        self.out = self.output(out, 8)
         self.cout = self.output(cout)
 
         adder = FullAdder(
             a=self.a[7], 
             b=self.b[7], 
             cin=self.cin,
-            s=self.s[7],
+            out=self.out[7],
         )
         for i in range(6, -1, -1):
             adder = FullAdder(
                 a=self.a[i], 
                 b=self.b[i], 
                 cin=adder.cout, 
-                s=self.s[i], 
+                out=self.out[i], 
                 cout=self.cout if i == 0 else None,
             )
 
@@ -88,7 +91,64 @@ class And8(Component):
             AND(a=self.a[i], b=self.b[i], out=self.out[i])
 
 
+class LeftShift8(Component):
+    """
+    Implements `a << b`, shifting `a` by a number of bits controlled by `b`. 
+    
+    Since we are working with 8 bits, only the three least significant bits do
+    "real" shifts, and if any of the 5 most significant bits are set then the
+    entire number will be shifted away and we'll be left with zero.
+    """
+    def __init__(self, a, b, out=None):
+        super().__init__()
+        self.a = self.input(a, 8)
+        self.b = self.input(b, 8)
+        self.out = self.output(out, 8)
+
+        # b's bottom 3 bits drive the barrel shifter.
+        barrel = Mux8(
+            a=self.a,
+            b=Bus(self.a[1:8] + ZERO[0:1]),
+            select=self.b[7] # ones place of b
+        ).out
+
+        barrel = Mux8(
+            a=barrel,
+            b=Bus(barrel[2:8] + ZERO[0:2]),
+            select=self.b[6] # twos place of b
+        ).out
+
+        barrel = Mux8(
+            a=barrel,
+            b=Bus(barrel[4:8] + ZERO[0:4]),
+            select=self.b[5] # fours place of b
+        ).out
+
+        # check if any of b's top five bits are set.
+        any_high_bit = OR(
+            OR(
+                OR(self.b[0], self.b[1]).out,
+                OR(self.b[2], self.b[3]).out
+            ).out,
+            self.b[4]
+        ).out
+
+        # return 0 if b >= 8, otherwise return
+        # the result from the barrel shifter.
+        Mux8(
+            a=barrel,
+            b=ZERO,
+            select=any_high_bit,
+            out=self.out
+        )
+
+
 class Mux8(Component):
+    """
+    8-bit Multiplexer.
+
+    Selects one of two 8-bit inputs controlled by a single `select` pin.
+    """
     def __init__(self, a, b, select, out=None):
         super().__init__()
         self.a = self.input(a, 8)
@@ -132,12 +192,15 @@ class ALU(Component):
         a,
         b,
         op,
-        out
+        cin,
+        out,
+        cout
     ):
         super().__init__()
         self.a = self.input(a, 8)
         self.b = self.input(b, 8)
         self.op = self.input(op, 8)
+        self.cin = self.input(cin)
 
         self.na = self.op[0]   # negate A
         self.nb = self.op[1]   # negate B
@@ -147,29 +210,31 @@ class ALU(Component):
         self.arithmetic = self.op[5]  # 0 for AND, 1 for ADD
         # last two bits reserved
 
-        self.out = self.output(out)
+        self.out = self.output(out, 8)
+        self.cout = self.output(cout)
         
-        zero = Bus([Wire(False, hard=True) for i in range(8)])
-
         # Optionally zero-out and/or negate input A
-        a2 = Mux8(self.a, zero, self.za).out
+        a2 = Mux8(self.a, ZERO, self.za).out
         a3 = Mux8(a2, Not8(a2).out, self.na).out
 
         # Optionally zero-out and/or negate input B
-        b2 = Mux8(self.b, zero, self.zb).out
+        b2 = Mux8(self.b, ZERO, self.zb).out
         b3 = Mux8(b2, Not8(b2).out, self.nb).out
 
         # Do either Arithmetic or Logic
-        out = Mux8(
-            a=And8(a3, b3).out,
-            b=Add8(a3, b3).out,
+        a_and_b = And8(a=a3, b=b3).out
+        a_plus_b = Add8(a=a3, b=b3, cin=self.cin, cout=self.cout).out
+
+        result = Mux8(
+            a=a_and_b,
+            b=a_plus_b,
             select=self.arithmetic
         ).out
 
         # Optionally negate the output
         Mux8(
-            a=out,
-            b=Not8(out),
+            a=result,
+            b=Not8(inp=result).out,
             select=self.nout,
             out=self.out
         )

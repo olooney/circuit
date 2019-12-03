@@ -45,7 +45,13 @@ class TestBus(unittest.TestCase):
     def test_init_from_length(self):
         bus = Bus(4)
         self.assertEqual(len(bus), 4)
+        self.assertEqual(bus.value, None)
+
+        for wire in bus:
+            wire.value = False
         self.assertEqual(bus.value, 0)
+
+        bus.reset()
         for wire in bus:
             wire.value = True
         self.assertEqual(bus.value, 15)
