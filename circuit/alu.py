@@ -91,6 +91,28 @@ class And8(Component):
             AND(a=self.a[i], b=self.b[i], out=self.out[i])
 
 
+class Mux8(Component):
+    """
+    8-bit Multiplexer.
+
+    Selects one of two 8-bit inputs controlled by a single `select` pin.
+    """
+    def __init__(self, a, b, select, out=None):
+        super().__init__()
+        self.a = self.input(a, 8)
+        self.b = self.input(b, 8)
+        self.select = self.input(select)
+        self.out = self.output(out, 8)
+
+        for i in range(8):
+            Mux(
+                a=self.a[i], 
+                b=self.b[i],
+                select=self.select,
+                out=self.out[i]
+            )
+            
+
 class LeftShift8(Component):
     """
     Implements `a << b`, shifting `a` by a number of bits controlled by `b`. 
@@ -142,28 +164,6 @@ class LeftShift8(Component):
             out=self.out
         )
 
-
-class Mux8(Component):
-    """
-    8-bit Multiplexer.
-
-    Selects one of two 8-bit inputs controlled by a single `select` pin.
-    """
-    def __init__(self, a, b, select, out=None):
-        super().__init__()
-        self.a = self.input(a, 8)
-        self.b = self.input(b, 8)
-        self.select = self.input(select)
-        self.out = self.output(out, 8)
-
-        for i in range(8):
-            Mux(
-                a=self.a[i], 
-                b=self.b[i],
-                select=self.select,
-                out=self.out[i]
-            )
-            
 
 class ALU(Component):
     """

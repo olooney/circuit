@@ -209,7 +209,6 @@ class NAND(Component):
             wire.reset()
 
 
-
 class Register(Component):
     """
     The Register is the only "stateful" Component necessary to implement all
