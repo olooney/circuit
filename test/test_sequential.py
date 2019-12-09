@@ -41,24 +41,55 @@ class Register8Test(unittest.TestCase):
         self.assertEqual(out.value, 255, "Now 255, not 100")
 
 
-@unittest.skip
 class Counter8Test(unittest.TestCase):
     def test_counter8(self):
-        enable = Wire()
         counter = Counter8(
-            enable=enable,
-            reset=FALSE
+            enable=TRUE,
+            zero=FALSE
         )
-        enable.reset()
-        enable.value = True
+        rails = Bus([TRUE, FALSE])
 
         for i in range(260):
-            enable.reset()
-            enable.value = True
-            self.assertEqual(counter.out.value, i)
+            rails.reset()
+            rails.propagate()
+
+            # print("test_counter8", , counter.out.value)
+            self.assertEqual(counter.out.value, i % 256)
 
     def test_enable(self):
-        pass # TODO
+        fizz_buzz = Wire()
+        counter = Counter8(
+            enable=fizz_buzz,
+            zero=FALSE
+        )
+        rails = Bus([TRUE, FALSE])
+
+        correct = 0
+        for i in range(25):
+            rails.reset()
+            fizz_buzz.reset()
+            rails.propagate()
+            fizz_buzz.value = (i % 3 != 0) and (i % 5 != 0)
+
+            # print("test_enable", i, counter.out.value, correct)
+            self.assertEqual(counter.out.value, correct)
+
+            if fizz_buzz.value is True:
+                correct += 1
 
     def test_reset(self):
-        pass # TODO
+        reset_to_zero = Wire()
+        counter = Counter8(
+            enable=TRUE,
+            zero=reset_to_zero
+        )
+        rails = Bus([TRUE, FALSE])
+
+        for i in range(25):
+            rails.reset()
+            reset_to_zero.reset()
+            reset_to_zero.value = (i == 9) or (i == 19)
+            rails.propagate()
+
+            # print("test_reset", i, counter.out.value, i % 10)
+            self.assertEqual(counter.out.value, i % 10)

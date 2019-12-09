@@ -29,6 +29,7 @@ class Wire:
         self.hard = bool(hard)
         if self.hard and self._value is None:
             raise WireError("a hardwired value must be True or False, not None.")
+        self.already_reset = False
 
     @property
     def value(self):
@@ -49,12 +50,15 @@ class Wire:
             raise WireError("Use reset() to clear wire.")
 
     def reset(self):
-        if self.value is not None and not self.hard:
-            self._value = None
+        if not self.already_reset:
+            self.already_reset = True
+            if self.value is not None and not self.hard:
+                self._value = None
             for component in self.downstream_components:
                 component.reset()
 
     def propagate(self):
+        self.already_reset = False
         for component in self.downstream_components:
             component.propagate()
 
@@ -222,26 +226,27 @@ class Register(Component):
         self.out = self.output(out)
 
         self.state = False
-        self.next_state = None
+        self.next_state = False
+        self.already_reset = False
 
     def propagate(self):
+        self.already_reset = False
+
         # capture the next state if enabled
         if self.enable.value is True and self.inp.value is not None:
             self.next_state = self.inp.value
+        else:
+            self.next_state = self.state
 
-        # always propogate the current value
+        # always propogate the current value, but only once
         if self.out.value is None:
             self.out.value = self.state
 
     def reset(self):
-        super().reset()
-
-        # update internal state if appropriate
-        if self.next_state is not None:
+        if not self.already_reset:
+            # propagate the reset
             self.state = self.next_state
-            self.next_state = None
-
-        # propagate the reset
-        for wire in self.outputs:
-            wire.reset()
+            self.already_reset = True
+            for wire in self.outputs:
+                wire.reset()
 

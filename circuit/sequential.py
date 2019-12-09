@@ -20,10 +20,10 @@ class Register8(Component):
 
 
 class Counter8(Component):
-    def __init__(self, enable, reset, out=None):
+    def __init__(self, enable, zero, out=None):
         super().__init__()
         self.enable = self.input(enable)
-        self.reset = self.input(reset)
+        self.zero = self.input(zero)
         self.out = self.output(out, 8)
 
         # this will feed back into the register
@@ -48,7 +48,7 @@ class Counter8(Component):
         Mux8(
             a=incremented,
             b=ZERO,
-            select=self.reset,
+            select=self.zero,
             out=loopback
         )
 
