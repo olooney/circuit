@@ -91,6 +91,17 @@ class And8(Component):
             AND(a=self.a[i], b=self.b[i], out=self.out[i])
 
 
+class Or8(Component):
+    def __init__(self, a, b, out=None):
+        super().__init__()
+        self.a = self.input(a, 8)
+        self.b = self.input(b, 8)
+        self.out = self.output(out, 8)
+
+        for i in range(0, 8):
+            OR(a=self.a[i], b=self.b[i], out=self.out[i])
+
+
 class Mux8(Component):
     """
     8-bit Multiplexer.
@@ -163,6 +174,40 @@ class LeftShift8(Component):
             select=any_high_bit,
             out=self.out
         )
+
+
+class NonZero8(Component):
+    def __init__(self, inp, out=None):
+        super().__init__()
+        self.a = self.input(a, 8)
+        self.out = self.output(out)
+
+        OR(
+            OR(
+                OR(a[0], a[1]).out,
+                OR(a[2], a[3]).out
+            ).out,
+            OR(
+                OR(a[4], a[5]).out,
+                OR(a[6], a[7]).out
+            ).out,
+            out=self.out
+        )
+
+
+class Equal8(Component):
+    def __init__(self, a, b, out=None):
+        super().__init__()
+        self.a = self.input(a, 8)
+        self.b = self.input(b, 8)
+        self.out = self.output(out)
+
+        bit_compare = Bus([
+            XNOR(inp=self.inp[i], out=self.out[i])
+            for i in range(0, 8)
+        ])
+        non_zero = NonZero8(bit_compare).out
+        NOT(inp=non_zero, out=self.out)
 
 
 class ALU(Component):
