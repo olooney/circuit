@@ -1,10 +1,13 @@
 import unittest
 
-from circuit.kernel import Wire, Bus, Register, NAND, WireError
+from circuit import Wire, Bus, Register, NAND, WireError, reset_globals
 from circuit.alu import *
 
 
 class AdderTest(unittest.TestCase):
+    def setUp(self):
+        reset_globals()
+
     def test_half_adder(self):
         a, b = inputs = Bus(2)
         out, c = outputs = Bus(2)
@@ -50,6 +53,9 @@ class EightBitTest(unittest.TestCase):
     """
     Test the various 8-bit components found in `circuit.alu`.
     """
+    def setUp(self):
+        reset_globals()
+
     def test_and8(self):
         a = Bus(8)
         b = Bus(8)
@@ -141,6 +147,8 @@ class EightBitTest(unittest.TestCase):
 
 class ALUTest(unittest.TestCase):
     def setUp(self):
+        reset_globals()
+
         self.inputs = Bus([Bus(8), Bus(8), Bus(8), Wire()])
         self.a, self.b, self.op, self.cin = self.inputs
 

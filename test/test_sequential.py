@@ -1,9 +1,12 @@
 import unittest
-from circuit import Wire, Bus, TRUE, FALSE
-from circuit.sequential import Register8, Counter8
+from circuit import Wire, Bus, TRUE, FALSE, reset_globals
+from circuit.sequential import Register8, Counter8, RAM
 
 
 class Register8Test(unittest.TestCase):
+    def setUp(self):
+        reset_globals()
+
     def test_register8(self):
         inp = Bus(8)
         enable = Wire()
@@ -42,6 +45,9 @@ class Register8Test(unittest.TestCase):
 
 
 class Counter8Test(unittest.TestCase):
+    def setUp(self):
+        reset_globals()
+
     def test_counter8(self):
         counter = Counter8(
             enable=TRUE,
@@ -93,3 +99,72 @@ class Counter8Test(unittest.TestCase):
 
             # print("test_reset", i, counter.out.value, i % 10)
             self.assertEqual(counter.out.value, i % 10)
+
+
+class RAMTest(unittest.TestCase):
+    def setUp(self):
+        reset_globals()
+
+        self.addr = Bus(8)
+        self.din = Bus(8)
+        self.dout = Bus(8)
+        self.write_pin = Wire()
+        self.ram = RAM(
+            inp=self.din, 
+            out=self.dout, 
+            addr=self.addr, 
+            write=self.write_pin
+        )
+
+    def reset(self):
+        self.addr.reset()
+        self.din.reset()
+        self.write_pin.reset()
+
+    def write(self, address, value):
+        self.reset()
+        self.din.value = value
+        self.addr.value = address
+        self.write_pin.value = True
+
+    def read(self, address):
+        self.reset()
+        self.din.value = 0
+        self.addr.value = address
+        self.write_pin.value = False
+
+        return self.dout.value
+
+    def test_ram(self):
+        self.assertEqual(self.read(0), 0)
+        self.write(0, 42)
+        self.assertEqual(self.read(0), 42)
+        self.write(1, 17)
+        self.write(2, 255)
+        self.assertEqual(self.read(0), 42)
+        self.assertEqual(self.read(1), 17)
+        self.assertEqual(self.read(2), 255)
+
+        self.write(255, 128)
+        self.write(16, 10)
+        self.assertEqual(self.read(255), 128)
+        self.assertEqual(self.read(1), 17)
+        self.assertEqual(self.read(2), 255)
+        self.assertEqual(self.read(16), 10)
+
+        # print(self.ram.hex_dump())
+
+
+    @unittest.skip
+    def test_ram_heavy(self):
+        for i in range(256):
+            self.write(i, i)
+
+        for i in range(256):
+            self.assertEqual(self.read(i), i)
+
+        # print()
+        # print(self.ram.hex_dump())
+
+
+

@@ -70,6 +70,11 @@ TRUE = Wire(value=True, hard=True)
 FALSE = Wire(value=False, hard=True)
 
 
+def reset_globals():
+    TRUE.downstream_components = []
+    FALSE.downstream_components = []
+
+
 class Bus(Wire):
     """
     A bus is simply a bundle of parallel wires. It implements the

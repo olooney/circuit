@@ -12,12 +12,26 @@ class Register8(Component):
         self.enable = self.input(enable)
         self.out = self.output(out, 8)
 
-        for i in range(8):
+        self.bit_registers = [
             Register(
                 inp=self.inp[i],
                 enable=self.enable,
                 out=self.out[i]
             )
+            for i in range(8)
+        ]
+
+    @property
+    def state(self):
+        """
+        For debugging purposes, this read-only
+        property exposes the internal state of
+        this register as an 8-bit unsigned integer.
+        """
+        value = 0
+        for bit in self.bit_registers:
+            value = (value << 1) + bit.state
+        return value
 
 
 class Counter8(Component):
@@ -88,10 +102,11 @@ class RAM(Component):
         # register) may not be zero; that one contains the output value.
         outputs = [
             Mux8(
-                a=self.register[i].out,
-                b=ZERO,
+                a=ZERO,
+                b=self.registers[i].out,
                 select=self.selected[i]
             ).out
+            for i in range(256)
         ]
 
         # Yikes, an inverse multiplexer sure needs a lot of transistors when
@@ -117,7 +132,7 @@ class RAM(Component):
         `Equal8(addr, index)` component.
         """
         a = [
-            self.addr[j] if index & (1 << j) else self.not_addr[j]
+            self.addr[j] if index & (128 >> j) else self.not_addr[j]
             for j in range(8)
         ]
 
@@ -130,6 +145,19 @@ class RAM(Component):
                 AND(a[4], a[5]).out,
                 AND(a[6], a[7]).out
             ).out,
-            out=self.out
         ).out
+
+
+    def hex_dump(self):
+        out = []
+        for row in range(16):
+            row_out = []
+            for col in range(16):
+                index = 16 * row + col
+                state = self.registers[index].state
+                hex_string = f"{state:02x}" if state is not None else "  "
+                row_out.append(hex_string)
+            out.append(" ".join(row_out))
+        return "\n".join(out)
+
 
