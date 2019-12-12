@@ -2,8 +2,8 @@
 Sequential logic is based on the stateful Register primitive.
 """
 from .kernel import Component, Register, Wire, Bus, TRUE, FALSE
-from .alu import *
-from .logic_gates import *
+from .combinational import Not8, Add8, Or8, Mux8, ZERO
+from .logic_gates import AND
 
 class Register8(Component):
     def __init__(self, inp, enable, out=None):
@@ -147,7 +147,6 @@ class RAM(Component):
             ).out,
         ).out
 
-
     def hex_dump(self):
         out = []
         for row in range(16):
@@ -159,5 +158,3 @@ class RAM(Component):
                 row_out.append(hex_string)
             out.append(" ".join(row_out))
         return "\n".join(out)
-
-

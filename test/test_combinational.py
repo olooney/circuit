@@ -1,7 +1,7 @@
 import unittest
 
 from circuit import Wire, Bus, Register, NAND, WireError, reset_globals
-from circuit.alu import *
+from circuit.combinational import *
 
 
 class AdderTest(unittest.TestCase):

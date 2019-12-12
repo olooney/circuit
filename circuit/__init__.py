@@ -10,8 +10,19 @@ from .kernel import (
     FALSE,
     reset_globals
 )
-from .logic_gates import NOT, AND, OR, XOR, XNOR
-from .alu import (
+
+from .logic_gates import (
+    NOT,
+    AND,
+    # NAND comes from kernel
+    OR,
+    NOR,
+    XOR,
+    XNOR,
+    Mux
+)
+
+from .combinational import (
     HalfAdder,
     FullAdder,
     Add8,
@@ -23,4 +34,10 @@ from .alu import (
     NonZero8,
     Equal8,
     ALU
+)
+
+from .sequential import (
+    Register8,
+    Counter8,
+    RAM
 )
