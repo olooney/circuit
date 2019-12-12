@@ -12,6 +12,19 @@ cycles. This is the primitive used to implement all sequential logic.
 
 """
 
+__all__ = [
+    "Wire",
+    "Component",
+    "Bus",
+    "Register",
+    "CircuitError",
+    "WireError",
+    "NAND",
+    "TRUE",
+    "FALSE",
+    "reset_globals",
+]
+
 class CircuitError(Exception):
     pass
 

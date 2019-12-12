@@ -33,7 +33,8 @@ from .combinational import (
     LeftShift8,
     NonZero8,
     Equal8,
-    ALU
+    ALU,
+    ZERO
 )
 
 from .sequential import (

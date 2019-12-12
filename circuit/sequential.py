@@ -5,6 +5,12 @@ from .kernel import Component, Register, Wire, Bus, TRUE, FALSE
 from .combinational import Not8, Add8, Or8, Mux8, ZERO
 from .logic_gates import AND
 
+__all__ = [
+    "Register8",
+    "Counter8",
+    "RAM",
+]
+
 class Register8(Component):
     def __init__(self, inp, enable, out=None):
         super().__init__()

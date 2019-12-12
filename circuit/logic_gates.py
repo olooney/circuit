@@ -3,6 +3,18 @@ Common combinational logic gates.
 """
 from .kernel import Wire, Component, NAND
 
+__all__ = [
+    "NOT",
+    "AND",
+    "NAND", # intentional
+    "OR",
+    "NOR",
+    "XOR",
+    "XNOR",
+    "Mux",
+]
+
+
 class NOT(Component):
     """
     In CMOS architecture, a NOT gate can be implemented

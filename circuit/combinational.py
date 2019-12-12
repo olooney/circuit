@@ -1,6 +1,21 @@
 from .kernel import Wire, Bus, Component, TRUE, FALSE
 from .logic_gates import NOT, AND, OR, XOR, Mux
 
+__all__ = [
+    "HalfAdder",
+    "FullAdder",
+    "Add8",
+    "Not8",
+    "And8",
+    "Or8",
+    "Mux8",
+    "LeftShift8",
+    "NonZero8",
+    "Equal8",
+    "ALU",
+    "ZERO",
+]
+
 # constant 8-bit zero (all bits 0)
 ZERO = Bus([FALSE for i in range(8)])
 
