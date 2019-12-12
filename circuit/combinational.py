@@ -1,3 +1,9 @@
+"""
+Provdes more advanced combinational (stateless) components implemented purely
+in terms of NAND - Register is not used.  These are mainly 8-bit arithmetic and
+bitwise logic operators. Also provides the very general ALU component, which
+can implement many 8-bit math and logic operations.
+"""
 from .kernel import Wire, Bus, Component, TRUE, FALSE
 from .logic_gates import NOT, AND, OR, XOR, Mux
 
@@ -18,6 +24,7 @@ __all__ = [
 
 # constant 8-bit zero (all bits 0)
 ZERO = Bus([FALSE for i in range(8)])
+
 
 class HalfAdder(Component):
     def __init__(self, a, b, out=None, c=None):
@@ -266,8 +273,8 @@ class ALU(Component):
         b,
         op,
         cin,
-        out,
-        cout
+        out=None,
+        cout=None
     ):
         super().__init__()
         self.a = self.input(a, 8)
